@@ -3,13 +3,47 @@
     <h2>{{ editing ? '编辑题目' : '添加题目' }}</h2>
     <form @submit.prevent="submitForm">
       <div class="form-group">
+        <label>题目类型</label>
+        <select v-model="formData.type" class="type-select">
+          <option value="text">文本题</option>
+          <option value="choice">选择题</option>
+          <option value="judge">判断题</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <label>题目内容</label>
         <textarea v-model="formData.content" required></textarea>
       </div>
       
       <div class="form-group">
         <label>答案</label>
-        <textarea v-model="formData.answer" required></textarea>
+        <div v-if="formData.type === 'choice'" class="answer-options">
+          <label v-for="(opt, index) in ['A', 'B', 'C', 'D']" :key="index">
+            <input 
+              type="radio" 
+              v-model="formData.answer" 
+              :value="opt"
+            > {{ opt }}
+          </label>
+        </div>
+        <div v-else-if="formData.type === 'judge'" class="answer-options">
+          <label>
+            <input 
+              type="radio" 
+              v-model="formData.answer" 
+              value="正确"
+            > 正确
+          </label>
+          <label>
+            <input 
+              type="radio" 
+              v-model="formData.answer" 
+              value="错误"
+            > 错误
+          </label>
+        </div>
+        <textarea v-else v-model="formData.answer" required></textarea>
       </div>
       
       <div class="form-group">
@@ -83,6 +117,7 @@ const availablePapers = computed(() => {
 
 const formData = ref({
   id: '',
+  type: 'text',
   content: '',
   answer: '',
   explanation: '',
@@ -170,5 +205,27 @@ textarea {
   border: 1px solid #ccc;
   border-radius: 4px;
   margin-top: 5px;
+}
+
+.type-select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.answer-options label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
 }
 </style>
