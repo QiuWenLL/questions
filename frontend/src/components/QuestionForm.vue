@@ -1,0 +1,141 @@
+<template>
+  <div class="question-form">
+    <h2>{{ editing ? '编辑题目' : '添加题目' }}</h2>
+    <form @submit.prevent="submitForm">
+      <div class="form-group">
+        <label>题目内容</label>
+        <textarea v-model="formData.content" required></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>答案</label>
+        <textarea v-model="formData.answer" required></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>解析</label>
+        <textarea v-model="formData.explanation"></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>难度</label>
+        <select v-model="formData.difficulty">
+          <option value="easy">简单</option>
+          <option value="medium">中等</option>
+          <option value="hard">困难</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>所属试卷</label>
+        <input 
+          type="text" 
+          v-model="formData.paper"
+          placeholder="例如：信息网络A卷"
+        >
+      </div>
+
+      <div class="form-group">
+        <label>标签</label>
+        <input 
+          type="text" 
+          v-model="tagInput"
+          @keydown.enter.prevent="addTag"
+          placeholder="输入标签后按回车添加"
+        >
+        <div class="tags">
+          <span v-for="(tag, index) in formData.tags" :key="index" class="tag">
+            {{ tag }}
+            <button @click="removeTag(index)">×</button>
+          </span>
+        </div>
+      </div>
+      
+      <button type="submit">提交</button>
+    </form>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useQuestionStore } from '@/stores/question'
+
+const questionStore = useQuestionStore()
+const editing = ref(false)
+const tagInput = ref('')
+
+const formData = ref({
+  id: '',
+  content: '',
+  answer: '',
+  explanation: '',
+  difficulty: 'medium',
+  paper: '',
+  tags: [] as string[]
+})
+
+const addTag = () => {
+  if (tagInput.value.trim() && !formData.value.tags.includes(tagInput.value.trim())) {
+    formData.value.tags.push(tagInput.value.trim())
+    tagInput.value = ''
+  }
+}
+
+const removeTag = (index: number) => {
+  formData.value.tags.splice(index, 1)
+}
+
+const submitForm = () => {
+  if (editing.value) {
+    questionStore.updateQuestion(formData.value)
+  } else {
+    questionStore.addQuestion(formData.value)
+  }
+  resetForm()
+}
+
+const resetForm = () => {
+  formData.value = {
+    id: '',
+    content: '',
+    answer: '',
+    explanation: '',
+    difficulty: 'medium',
+    tags: []
+  }
+  editing.value = false
+}
+</script>
+
+<style scoped>
+.question-form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 8px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.tag {
+  background: #eee;
+  padding: 3px 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+}
+</style>
