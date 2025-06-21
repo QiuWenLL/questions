@@ -28,10 +28,18 @@
       
       <div class="form-group">
         <label>所属试卷</label>
+        <select v-model="formData.paper" class="paper-select">
+          <option value="">-- 选择试卷 --</option>
+          <option v-for="paper in availablePapers" :value="paper" :key="paper">
+            {{ paper }}
+          </option>
+        </select>
         <input 
+          v-if="formData.paper === '' || !availablePapers.includes(formData.paper)"
           type="text" 
           v-model="formData.paper"
-          placeholder="例如：信息网络A卷"
+          placeholder="输入新试卷名称"
+          class="paper-input"
         >
       </div>
 
@@ -57,12 +65,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useQuestionStore } from '@/stores/question'
 
 const questionStore = useQuestionStore()
 const editing = ref(false)
 const tagInput = ref('')
+
+// 获取已有试卷列表
+const availablePapers = computed(() => {
+  const papers = new Set<string>()
+  questionStore.questions.forEach(q => {
+    if (q.paper) papers.add(q.paper)
+  })
+  return Array.from(papers)
+})
 
 const formData = ref({
   id: '',
@@ -137,5 +154,21 @@ textarea {
   border-radius: 10px;
   display: flex;
   align-items: center;
+}
+
+.paper-select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.paper-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 5px;
 }
 </style>
