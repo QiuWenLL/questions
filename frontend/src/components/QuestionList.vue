@@ -25,13 +25,18 @@
       />
     </div>
     
-    <div class="list">
+    <div v-if="questionStore.loading" class="loading">加载中...</div>
+    <div v-else-if="questionStore.error" class="error">
+      加载失败: {{ questionStore.error }}
+      <button @click="questionStore.fetchQuestions" class="retry-button">重试</button>
+    </div>
+    <div v-else class="list">
       <div 
         v-for="question in filteredQuestions" 
-        :key="question.id" 
+        :key="question._id" 
         class="question-item"
       >
-        <div class="content" @click="viewQuestion(question.id)">
+        <div class="content" @click="viewQuestion(question._id)">
           <h3>{{ question.content.substring(0, 50) }}{{ question.content.length > 50 ? '...' : '' }}</h3>
           <div class="meta">
             <span class="difficulty" :class="question.difficulty">
@@ -49,7 +54,7 @@
         </div>
         <div class="actions">
           <button @click.stop="editQuestion(question)">编辑</button>
-          <button @click.stop="deleteQuestion(question.id)">删除</button>
+          <button @click.stop="deleteQuestion(question._id)">删除</button>
         </div>
       </div>
     </div>
@@ -57,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuestionStore } from '@/stores/question'
 import QuestionForm from './QuestionForm.vue'
 import { useRouter } from 'vue-router'
@@ -67,6 +72,10 @@ const questionStore = useQuestionStore()
 const showForm = ref(false)
 const searchQuery = ref('')
 const filterDifficulty = ref('')
+
+onMounted(() => {
+  questionStore.fetchQuestions()
+})
 
 const filteredQuestions = computed(() => {
   return questionStore.questions.filter(question => {
@@ -86,9 +95,13 @@ const editQuestion = (question: any) => {
   showForm.value = true
 }
 
-const deleteQuestion = (id: string) => {
+const deleteQuestion = async (id: string) => {
   if (confirm('确定要删除这个题目吗？')) {
-    questionStore.removeQuestion(id)
+    try {
+      await questionStore.removeQuestion(id)
+    } catch (error) {
+      alert('删除题目失败，请重试')
+    }
   }
 }
 </script>
@@ -183,5 +196,34 @@ const deleteQuestion = (id: string) => {
 
 .form-container {
   margin-bottom: 20px;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.error {
+  padding: 20px;
+  text-align: center;
+  color: #c62828;
+  background-color: #ffebee;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.retry-button {
+  margin-left: 10px;
+  padding: 5px 10px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.retry-button:hover {
+  background-color: #1565c0;
 }
 </style>
